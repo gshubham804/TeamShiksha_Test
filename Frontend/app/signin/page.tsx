@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api } from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const Signin = () => {
   const [email, setEmail] = useState<string>('');
@@ -22,14 +23,19 @@ const Signin = () => {
       if (email && password) {
         const data = await api.post('/signin', { email, password });
         
+        // Store token and user data
+        localStorage.setItem('token', data.token);
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', data.user.email);
         localStorage.setItem('userName', data.user.name);
         
+        toast.success(data.message || 'Sign in successful!');
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.message || 'An error occurred during sign in';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

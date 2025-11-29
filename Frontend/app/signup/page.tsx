@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Mail, Lock, UserPlus, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { api } from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const Signup = () => {
   const [name, setName] = useState<string>('');
@@ -21,18 +22,17 @@ const Signup = () => {
 
     try {
       if (name && email && password) {
-        await api.post('/signup', { name, email, password });
+        const data = await api.post('/signup', { name, email, password });
         
-        // Auto login or redirect to signin
-        // For now, let's redirect to signin to force login flow or we can set auth directly
-        // But the backend doesn't return a token, just success. 
-        // Let's redirect to signin for better security flow or just set local storage if we trust it.
-        // The plan said "Connect Signup page to Backend".
-        // Let's redirect to signin so user can verify credentials.
-        router.push('/signin');
+        toast.success(data.message || 'Account created successfully! Redirecting to sign in...');
+        setTimeout(() => {
+          router.push('/signin');
+        }, 1500);
       }
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err.message || 'An error occurred during sign up';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

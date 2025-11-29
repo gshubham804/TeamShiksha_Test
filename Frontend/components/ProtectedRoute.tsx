@@ -7,8 +7,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
-    if (!isAuthenticated) {
+    if (!token || !isAuthenticated) {
       router.push("/signin");
     } else {
       setIsAuthorized(true);

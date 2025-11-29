@@ -13,19 +13,21 @@ const UserDashboard = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const email = localStorage.getItem('userEmail');
-      if (!email) {
+      const token = localStorage.getItem('token');
+      if (!token) {
         // Should be handled by ProtectedRoute but extra safety
+        router.push('/signin');
         return;
       }
 
       try {
-        const data = await api.get(`/me?email=${email}`);
-        setUserData(data.user);
+        const data = await api.get('/me');
+        setUserData(data);
       } catch (err: any) {
         setError(err.message);
-        // If auth fails, maybe logout?
-        if (err.message === 'Not authenticated' || err.message === 'User not found') {
+        // If auth fails, logout
+        if (err.message.includes('token') || err.message.includes('authorization') || err.message.includes('401')) {
+           localStorage.removeItem('token');
            localStorage.removeItem('isAuthenticated');
            localStorage.removeItem('userEmail');
            localStorage.removeItem('userName');
@@ -40,6 +42,7 @@ const UserDashboard = () => {
   }, [router]);
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');

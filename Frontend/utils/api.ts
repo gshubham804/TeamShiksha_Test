@@ -23,10 +23,32 @@ export const api = {
             body: JSON.stringify(data),
         });
 
-        const responseData = await response.json();
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        let responseData;
+        
+        try {
+            const text = await response.text();
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    responseData = JSON.parse(text);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response from server');
+                }
+            } else {
+                // If not JSON, it's likely an error page
+                throw new Error(text || 'Invalid response from server');
+            }
+        } catch (parseError: any) {
+            if (!response.ok) {
+                throw new Error(parseError.message || 'Failed to parse response');
+            }
+            throw parseError;
+        }
 
         if (!response.ok) {
-            throw new Error(responseData.message || 'Something went wrong');
+            throw new Error(responseData?.message || 'Something went wrong');
         }
 
         return responseData;
@@ -38,10 +60,70 @@ export const api = {
             headers: getAuthHeaders(),
         });
 
-        const responseData = await response.json();
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        let responseData;
+        
+        try {
+            const text = await response.text();
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    responseData = JSON.parse(text);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response from server');
+                }
+            } else {
+                // If not JSON, it's likely an error page
+                throw new Error(text || 'Invalid response from server');
+            }
+        } catch (parseError: any) {
+            if (!response.ok) {
+                throw new Error(parseError.message || 'Failed to parse response');
+            }
+            throw parseError;
+        }
 
         if (!response.ok) {
-            throw new Error(responseData.message || 'Something went wrong');
+            throw new Error(responseData?.message || 'Something went wrong');
+        }
+
+        return responseData;
+    },
+
+    put: async (endpoint: string, data: any) => {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(data),
+        });
+
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        let responseData;
+        
+        try {
+            const text = await response.text();
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    responseData = JSON.parse(text);
+                } catch (parseError) {
+                    throw new Error('Invalid JSON response from server');
+                }
+            } else {
+                // If not JSON, it's likely an error page
+                throw new Error(text || 'Invalid response from server');
+            }
+        } catch (parseError: any) {
+            if (!response.ok) {
+                throw new Error(parseError.message || 'Failed to parse response');
+            }
+            throw parseError;
+        }
+
+        if (!response.ok) {
+            throw new Error(responseData?.message || 'Something went wrong');
         }
 
         return responseData;

@@ -31,6 +31,11 @@ const signinSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
+const updateUserSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  email: z.string().email('Invalid email address').optional(),
+});
+
 const auth = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -123,6 +128,56 @@ app.get('/me', auth, async (req, res) => {
     const user = await User.findById(req.user.userId).select('-password');
     res.json(user);
   } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user profile
+app.put('/me', auth, async (req, res) => {
+  console.log('PUT /me route hit');
+  try {
+    const result = updateUserSchema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({ 
+        message: 'Validation error', 
+        errors: result.error.flatten().fieldErrors 
+      });
+    }
+
+    const { name, email } = result.data;
+    const updateData = {};
+
+    // Check if email is being updated and if it's already taken
+    if (email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user.userId } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+      updateData.email = email;
+    }
+
+    if (name) {
+      updateData.name = name;
+    }
+
+    // Update user
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ 
+      message: 'Profile updated successfully', 
+      user 
+    });
+  } catch (error) {
+    console.error('Update error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
